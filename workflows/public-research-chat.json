@@ -1,0 +1,55 @@
+{
+  "name": "Public Research Assistant Chat",
+  "nodes": [
+    {
+      "name": "Public Chat",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [0, 16],
+      "webhookId": "a0c43b98-d4ce-425c-bec1-4ae95f94d6d8",
+      "parameters": {
+        "public": true,
+        "mode": "hostedChat",
+        "authentication": "none",
+        "initialMessages": "Hi! I am a multi-agent research assistant.\nAsk me a research question, e.g. \"How is the AI chip market doing this quarter?\"",
+        "options": {
+          "responseMode": "lastNode",
+          "title": "Multi-Agent Research Assistant",
+          "subtitle": "A planner splits your question into subtasks, researches them in parallel, and writes a cited report.",
+          "inputPlaceholder": "Ask a research question..."
+        }
+      }
+    },
+    {
+      "name": "Ask Research Agent",
+      "type": "n8n-nodes-base.messageAnAgent",
+      "typeVersion": 3.1,
+      "position": [224, 0],
+      "parameters": {
+        "agentId": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_AGENT_ID", "cachedResultName": "Multi-Agent Research Assistant" },
+        "message": "={{ $json.chatInput }}",
+        "advanced": {
+          "enableStreaming": false,
+          "invokeMode": "perItem",
+          "session": { "session": { "sessionIdType": "customKey", "sessionKey": "={{ $json.sessionId }}" } }
+        }
+      }
+    },
+    {
+      "name": "Format Reply",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [672, 16],
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [ { "id": "output", "name": "output", "type": "string", "value": "={{ $json.output ?? $json.text }}" } ] },
+        "includeOtherFields": false
+      }
+    }
+  ],
+  "connections": {
+    "Public Chat": { "main": [[{ "node": "Ask Research Agent", "type": "main", "index": 0 }]] },
+    "Ask Research Agent": { "main": [[{ "node": "Format Reply", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
